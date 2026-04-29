@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
 
   mosquitto:
@@ -13,3 +11,28 @@ services:
       - ./mosquitto/data:/mosquitto/data
       - ./mosquitto/log:/mosquitto/log
     restart: always
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: fleetlink-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infra/grafana/prometheus.yml:/etc/prometheus/prometheus.yml
+    restart: always
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: fleetlink-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=fleetlink123
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    restart: always
+
+volumes:
+  grafana_data:

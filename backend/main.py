@@ -1,13 +1,20 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+from prometheus_fastapi_instrumentator import Instrumentator
+from prometheus_client import Gauge, Counter
 import threading
 from mqtt_handler import start_mqtt_listener
 from database import get_latest_vitals, get_vitals_by_device
 
+# ── Prometheus Custom Metrics ──────────────────────────────────────────────
+critical_patients = Gauge("fleetlink_critical_patients", "Number of critical patients")
+normal_patients = Gauge("fleetlink_normal_patients", "Number of normal patients")
+total_patients = Gauge("fleetlink_total_patients", "Total number of patients online")
+mqtt_messages = Counter("fleetlink_mqtt_messages_total", "Total MQTT messages received")
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Start MQTT listener in background thread
     thread = threading.Thread(target=start_mqtt_listener, daemon=True)
     thread.start()
     print("[API] MQTT listener started in background")
@@ -28,6 +35,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ── Prometheus Instrumentator ──────────────────────────────────────────────
+Instrumentator().instrument(app).expose(app)
+
 @app.get("/")
 def root():
     return {"message": "FleetLink API is running", "status": "ok"}
@@ -39,6 +49,16 @@ def health():
 @app.get("/vitals")
 def get_vitals():
     data = get_latest_vitals()
+    
+    # Update Prometheus metrics
+    critical = len([d for d in data if d.get("status") == "critical"])
+    normal = len([d for d in data if d.get("status") == "normal"])
+    
+    critical_patients.set(critical)
+    normal_patients.set(normal)
+    total_patients.set(len(data))
+    mqtt_messages.inc()
+    
     return {"data": data, "count": len(data)}
 
 @app.get("/vitals/{device_id}")
