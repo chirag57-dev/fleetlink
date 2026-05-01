@@ -22,7 +22,7 @@ export default function Home() {
 
   const fetchVitals = async () => {
     try {
-      const res = await axios.get("http://localhost:8000/vitals");
+      const res = await axios.get("http://4.187.201.97:8000/vitals");
       const data: Vitals[] = res.data.data;
 
       // Keep only latest reading per device

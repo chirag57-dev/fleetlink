@@ -1,0 +1,107 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fleetlink-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fleetlink-backend
+  template:
+    metadata:
+      labels:
+        app: fleetlink-backend
+    spec:
+      containers:
+      - name: backend
+        image: fleetlinkregistry.azurecr.io/backend:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: MQTT_BROKER
+          value: "fleetlink-mqtt"
+        - name: SUPABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: fleetlink-secrets
+              key: SUPABASE_URL
+        - name: SUPABASE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: fleetlink-secrets
+              key: SUPABASE_KEY
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fleetlink-backend
+spec:
+  selector:
+    app: fleetlink-backend
+  ports:
+  - port: 8000
+    targetPort: 8000
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fleetlink-mqtt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fleetlink-mqtt
+  template:
+    metadata:
+      labels:
+        app: fleetlink-mqtt
+    spec:
+      containers:
+      - name: mqtt
+        image: eclipse-mosquitto:2.0
+        ports:
+        - containerPort: 1883
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fleetlink-mqtt
+spec:
+  selector:
+    app: fleetlink-mqtt
+  ports:
+  - port: 1883
+    targetPort: 1883
+  type: ClusterIP
+
+
+---
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fleetlink-mqtt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fleetlink-mqtt
+  template:
+    metadata:
+      labels:
+        app: fleetlink-mqtt
+    spec:
+      containers:
+      - name: mqtt
+        image: eclipse-mosquitto:2.0
+        ports:
+        - containerPort: 1883
+        volumeMounts:
+        - name: mosquitto-config
+          mountPath: /mosquitto/config/mosquitto.conf
+          subPath: mosquitto.conf
+      volumes:
+      - name: mosquitto-config
+        configMap:
+          name: mosquitto-config
