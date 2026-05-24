@@ -44,7 +44,14 @@ export default function Home() {
   };
 
   useEffect(() => {
-    fetchVitals();
+    // Wake up Render backend first
+    fetch("/api/health").catch(() => {});
+    
+    // Wait 3 seconds for backend to wake up then fetch
+    setTimeout(() => {
+      fetchVitals();
+    }, 3000);
+    
     const interval = setInterval(fetchVitals, 5000);
     return () => clearInterval(interval);
   }, []);
