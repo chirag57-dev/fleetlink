@@ -4,7 +4,7 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://4.187.201.97:8000/:path*',
+        destination: 'https://fleetlink-backend-rvnz.onrender.com/:path*',
       },
     ]
   },

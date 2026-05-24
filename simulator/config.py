@@ -5,6 +5,8 @@ load_dotenv()
 
 MQTT_BROKER = os.getenv("MQTT_BROKER", "localhost")
 MQTT_PORT = int(os.getenv("MQTT_PORT", 1883))
+MQTT_USERNAME = os.getenv("MQTT_USERNAME", "")
+MQTT_PASSWORD = os.getenv("MQTT_PASSWORD", "")
 MQTT_TOPIC_PREFIX = "fleetlink/patients"
 
 PATIENTS = [
@@ -17,7 +19,7 @@ PATIENTS = [
     {"id": "BED_007", "name": "Vikram Joshi",    "ward": "C"},
     {"id": "BED_008", "name": "Neha Agarwal",    "ward": "C"},
     {"id": "BED_009", "name": "Suresh Kumar",    "ward": "C"},
-    {"id": "BED_010", "name": "Kavitha Reddy",    "ward": "C"},
+    {"id": "BED_010", "name": "Kavita Reddy",    "ward": "C"},
 ]
 
-PUBLISH_INTERVAL = 5  # seconds between each data push
+PUBLISH_INTERVAL = 5
